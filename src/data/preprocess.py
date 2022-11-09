@@ -3,6 +3,7 @@ import os
 
 from PIL import Image
 import torch
+import torch.nn as nn 
 from torchvision import transforms
 from spacy.tokenizer import Tokenizer
 from spacy.lang.en import English
@@ -28,20 +29,27 @@ def preprocess_flickr_8k(vocab):
         image_captions = caption_reader.readlines()
 
     prev_image_name = None
-    processed_image_tensor = torch.empty(size=(len(image_captions)-1, 1000))
-    processed_caption_tensor = torch.empty(size=(len(image_captions)-1, 50))
-    for i, line in enumerate(image_captions[1:]):
+    num_caption = len(image_captions) - 1
+    assert num_caption % 5 == 0
+
+    image_tensors = []
+    caption_tensors = []
+    for line in image_captions[1:]:
         image_name, caption = line.strip().split(',', 1)
-        processed_caption_tensor[i] = torch.tensor(
+        caption_tensors.append(torch.tensor(
             [vocab[token] for token in tokenizer(caption.strip())] + [vocab['<EOS>']]
-        )
-        if image_name == prev_image_name:
-            processed_image_tensor[i] = prev_image_tensor
-        else:
+        ))
+        if image_name != prev_image_name:
             prev_image_name = image_name
             image = Image.open(os.path.join(image_dir_path, image_name))
-            prev_image_tensor = preprocess(image)
-            processed_image_tensor[i] = prev_image_tensor
+            image_tensors.append(preprocess(image))
+
+    processed_image_tensor = torch.tensor(image_tensors)
+    processed_caption_tensor = nn.utils.rnn.pad_sequence(
+        caption_tensors,
+        batch_first=True,
+        padding_value=vocab['<PAD>']
+    )
 
     processed_image_tensor.save(f'{DATA_DIR_PATH}/image_tensor.pt')
     processed_caption_tensor.save(f'{DATA_DIR_PATH}/caption_tensor.pt')

@@ -28,7 +28,7 @@ def create_vocab():
 
     ordered_dict = OrderedDict(
         sorted(counter.items(), key=lambda x: x[1], reverse=True),
-        specials=["<EOS>"],
+        specials=["<EOS>", "<PAD>"],
     )
     result = vocab(ordered_dict)
     result.save(vocab_path)
