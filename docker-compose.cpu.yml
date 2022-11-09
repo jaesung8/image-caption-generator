@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-cpu
+      args:
+        env: local
+    command: python3.8 run.py train
+    volumes:
+      - .:/iamge-caption-generator
