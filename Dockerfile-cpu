@@ -1,0 +1,23 @@
+FROM python:3.8.10-buster
+
+# Use the Korean official mirror in non-production environments
+RUN if [ ${env} != "production" ]; then \
+    cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
+    sed -i s%http://deb.debian.org/debian%http://ftp.kr.debian.org/debian% /etc/apt/sources.list; \
+    fi
+
+# System setup
+RUN apt-get update && \
+    apt-get -y install libaio1 wget unzip python3.8 python3.8-dev python3-pip && \
+    python3.8 -m pip install pip --upgrade && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . /image-caption-generator
+
+WORKDIR /image-caption-generator
+
+# Install related packages
+RUN pip install -r requirements.txt
+
+# Install pytorch
+RUN pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113

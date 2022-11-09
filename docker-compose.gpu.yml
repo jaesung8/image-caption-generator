@@ -1,0 +1,19 @@
+version: "3.3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-gpu
+      args:
+        env: local
+    shm_size: 60gb
+    command: python3.8 run.py train
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 2
+              capabilities: [gpu]
+    volumes:
+      - .:/iamge-caption-generator
