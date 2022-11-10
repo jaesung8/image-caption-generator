@@ -18,10 +18,10 @@ class CaptionGenerator(nn.Module):
     ):
         super(CaptionGenerator, self).__init__()
         self.device = device
-        self.encoder = Encoder(embedding_size)
+        self.encoder = Encoder(embedding_size).to(self.device)
         self.decoder = Decoder(
             embedding_size, hidden_size, vocab_size, num_layers
-        )
+        ).to(self.device)
         self.max_length = 50
 
     def forward(self, images, captions):
@@ -41,7 +41,7 @@ class CaptionGenerator(nn.Module):
                 predicted = output.argmax(1)
                 x = self.decoder.embedding(predicted).unsqueeze(0)
                 token = vocab.lookup_token[predicted.item()]
-                if token == "<EOS>":
+                if token == "<END>":
                     break
                 caption.append(token)
         return caption
@@ -59,7 +59,7 @@ class CaptionGenerator(nn.Module):
                 predicted = dist.sample()
                 x = self.decoder.embedding(predicted).unsqueeze(0)
                 token = vocab.lookup_token[predicted.item()]
-                if token == "<EOS>":
+                if token == "<END>":
                     break
                 caption.append(token)
         return caption

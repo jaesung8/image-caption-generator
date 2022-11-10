@@ -2,6 +2,7 @@ import os
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from src.model.caption_generator import CaptionGenerator
@@ -20,10 +21,10 @@ class Trainer:
             self.device = torch.device('cpu')
         self._init_hyperparameters(hyperparameters)
         self.vocab = create_vocab()
-        images, captions = preprocess_flickr_8k(self.vocab)
+        images, input, output = preprocess_flickr_8k(self.vocab)
         self.data_loader = DataLoader(
-            ImageCatpionDataset(images, captions),
-            batch_size=128,
+            ImageCatpionDataset(images, input, output),
+            batch_size=20,
         )
         self.model = CaptionGenerator(
             self.device,
@@ -38,23 +39,27 @@ class Trainer:
         self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=self.gamma)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.vocab["<PAD>"])
 
+    def _init_hyperparameters(self, hyperparameters):
+        for k, v in hyperparameters.items():
+            setattr(self, k, v)
 
     def train(self):
         prev_loss = None
         for epoch in range(self.num_epochs):
-            for i, (images, captions) in enumerate(self.data_loader):
-                images.to(self.device)
-                captions.to(self.device)
-                outputs = self.model(images, captions[:-1])
-                loss = self.criterion(outputs, captions)
+            for i, (images, captions, targets) in enumerate(self.data_loader):
+                images = images.to(self.device)
+                captions = captions.to(self.device)
+                targets = targets.to(self.device)
+                outputs = self.model(images, captions)
+                outputs = torch.permute(outputs, (0, 2, 1))
+                loss = self.criterion(outputs, targets)
                 self.optimizer.zero_grad()
-                loss.bacward()
+                loss.backward()
                 # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 self.optimizer.step()
             self.scheduler.step()
 
-            if epoch and epoch % self.epoch_interval == 0:
-                print(epoch, loss)
-                if not prev_loss or prev_loss > loss:
-                    self.model.save(os.path.join(MODEL_DIR_PATH, 'model.pt'))
-                    prev_loss = loss
+            print(epoch, loss)
+            if not prev_loss or prev_loss > loss:
+                torch.save(self.model, os.path.join(MODEL_DIR_PATH, 'model.pt'))
+                prev_loss = loss

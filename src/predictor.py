@@ -1,7 +1,6 @@
 import os
 import copy
 
-import numpy as np
 import torch
 
 from src.constants import MODEL_DIR_PATH, DATA_DIR_PATH
