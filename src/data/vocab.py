@@ -10,7 +10,7 @@ from src.constants import DATA_DIR_PATH
 
 
 def create_vocab():
-    vocab_path = os.path.join(DATA_DIR_PATH, "vocab.pth")
+    vocab_path = os.path.join(DATA_DIR_PATH, "vocab.pt")
     if os.path.isfile(vocab_path):
         return torch.load(vocab_path)
 
@@ -23,13 +23,10 @@ def create_vocab():
 
     for image_caption in image_captions[1:]:
         _, caption = image_caption.split(',', 1)
-        tokens = tokenizer(caption.strip())
+        tokens = [token.text for token in tokenizer(caption.strip())]
         counter.update(tokens)
 
-    ordered_dict = OrderedDict(
-        sorted(counter.items(), key=lambda x: x[1], reverse=True),
-        specials=["<EOS>", "<PAD>"],
-    )
-    result = vocab(ordered_dict)
-    result.save(vocab_path)
+    ordered_dict = OrderedDict(sorted(counter.items(), key=lambda x: (-x[1], x[0])))
+    result = vocab(ordered_dict, specials=['<START>','<END>', '<PAD>'])
+    torch.save(result, vocab_path)
     return result
