@@ -1,5 +1,8 @@
 FROM nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu18.04
 
+ARG env=production
+ARG DEBIAN_FRONTEND=noninteractive
+
 # Use the Korean official mirror in non-production environments
 RUN if [ ${env} != "production" ]; then \
     cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
@@ -23,4 +26,4 @@ WORKDIR /image-caption-generator
 RUN pip install -r requirements.txt
 
 # Install pytorch
-RUN pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
+RUN pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113

@@ -7,7 +7,7 @@ services:
       args:
         env: local
     shm_size: 60gb
-    command: python3.8 run.py train
+    command: python3.8 run.py
     deploy:
       resources:
         reservations:
@@ -16,4 +16,4 @@ services:
               count: 2
               capabilities: [gpu]
     volumes:
-      - .:/iamge-caption-generator
+      - .:/image-caption-generator

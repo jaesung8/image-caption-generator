@@ -6,6 +6,6 @@ services:
       dockerfile: Dockerfile-cpu
       args:
         env: local
-    command: python3.8 run.py train
+    command: python3.8 run.py
     volumes:
-      - .:/iamge-caption-generator
+      - .:/image-caption-generator

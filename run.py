@@ -14,11 +14,14 @@ def train():
         "num_epochs": 100,
         "epoch_interval": 10,
     }
-
-    trainer = Trainer(hyperparameters)
+    trainer = Trainer(**hyperparameters)
     trainer.train()
 
 
 @click.command()
 def predict():
     pass
+
+
+if __name__ == "__main__":
+    train()
