@@ -55,7 +55,6 @@ class Trainer:
         train_loss_list = []
         for epoch in range(self.num_epochs):
             train_loss, valid_loss = 0.0, 0.0
-            self.model.train()
             for i, (images, captions, targets) in enumerate(self.train_data_loader):
                 images = images.to(self.device)
                 captions = captions.to(self.device)
@@ -70,15 +69,15 @@ class Trainer:
                 train_loss += loss.item()
             self.scheduler.step()
 
-            self.model.eval()
-            for i, (images, captions, targets) in enumerate(self.valid_data_loader):
-                images = images.to(self.device)
-                captions = captions.to(self.device)
-                targets = targets.to(self.device)
-                outputs = self.model(images, captions)
-                outputs = torch.permute(outputs, (0, 2, 1))
-                loss = self.criterion(outputs, targets)
-                valid_loss += loss.item()
+            with torch.no_grad():
+                for i, (images, captions, targets) in enumerate(self.valid_data_loader):
+                    images = images.to(self.device)
+                    captions = captions.to(self.device)
+                    targets = targets.to(self.device)
+                    outputs = self.model(images, captions)
+                    outputs = torch.permute(outputs, (0, 2, 1))
+                    loss = self.criterion(outputs, targets)
+                    valid_loss += loss.item()
 
             train_loss = train_loss / self.train_data_num
             train_loss_list.append(train_loss)
