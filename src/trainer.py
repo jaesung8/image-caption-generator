@@ -89,7 +89,7 @@ class Trainer:
                 f'Epoch {epoch+1}  '
                 f'Training Loss: {train_loss:.6f}  ' 
                 f'Validation Loss: {valid_loss:.6f}  '
-                f'Time: {start_time-time.time()}'
+                f'Time: {time.time()-start_time}'
             )
 
             if not min_valid_loss or min_valid_loss > loss:
