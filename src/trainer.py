@@ -89,8 +89,8 @@ class Trainer:
             train_loss = train_loss / self.train_data_num
             train_loss_list.append(train_loss)
             print(
-                f'Epoch {epoch+1} '
-                f'Training Loss: {train_loss:.6f}' 
+                f'Epoch {epoch+1}  '
+                f'Training Loss: {train_loss:.6f}  ' 
                 f'Validation Loss: {valid_loss / self.valid_data_num:.6f}'
             )
 
