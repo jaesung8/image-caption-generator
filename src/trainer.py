@@ -22,9 +22,19 @@ class Trainer:
         self._init_hyperparameters(hyperparameters)
         self.vocab = create_vocab()
         images, input, output = preprocess_flickr_8k(self.vocab)
-        self.data_loader = DataLoader(
-            ImageCatpionDataset(images, input, output),
-            batch_size=20,
+        train_index = 40455 // 10 * 8
+        val_index = 40455 // 10 * 9
+        self.train_data_loader = DataLoader(
+            ImageCatpionDataset(images[:train_index], input[:train_index], output[:train_index]),
+            batch_size=128,
+        )
+        self.val_data_loader = DataLoader(
+            ImageCatpionDataset(
+                images[train_index:val_index],
+                input[train_index:val_index],
+                output[train_index:val_index]
+            ),
+            batch_size=128,
         )
         self.model = CaptionGenerator(
             self.device,
@@ -46,7 +56,7 @@ class Trainer:
     def train(self):
         prev_loss = None
         for epoch in range(self.num_epochs):
-            for i, (images, captions, targets) in enumerate(self.data_loader):
+            for i, (images, captions, targets) in enumerate(self.train_data_loader):
                 images = images.to(self.device)
                 captions = captions.to(self.device)
                 targets = targets.to(self.device)
