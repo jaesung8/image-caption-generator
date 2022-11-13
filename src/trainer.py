@@ -77,7 +77,7 @@ class Trainer:
             self.scheduler.step()
 
             self.model.eval()
-            for i, (images, captions, targets) in enumerate(self.val_data_loader):
+            for i, (images, captions, targets) in enumerate(self.valid_data_loader):
                 images = images.to(self.device)
                 captions = captions.to(self.device)
                 targets = targets.to(self.device)
