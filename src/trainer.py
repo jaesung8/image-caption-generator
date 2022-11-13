@@ -23,18 +23,12 @@ class Trainer:
         self._init_hyperparameters(hyperparameters)
         self.vocab = create_vocab()
         images, input, output = preprocess_flickr_8k(self.vocab)
-        train_index = 40455 // 10 * 8
-        valid_index = 40455 // 10 * 9
         self.train_data_loader = DataLoader(
-            ImageCatpionDataset(images[:train_index], input[:train_index], output[:train_index]),
+            ImageCatpionDataset(images, input, output, end=0.8),
             batch_size=128,
         )
         self.valid_data_loader = DataLoader(
-            ImageCatpionDataset(
-                images[train_index:valid_index],
-                input[train_index:valid_index],
-                output[train_index:valid_index]
-            ),
+            ImageCatpionDataset(images, input, output, start=0.8, end=0.9),
             batch_size=128,
         )
         self.train_data_num = len(self.train_data_loader)
