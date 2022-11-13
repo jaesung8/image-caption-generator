@@ -1,4 +1,5 @@
 import os
+import time
 
 import torch
 import torch.nn as nn
@@ -52,9 +53,10 @@ class Trainer:
 
     def train(self):
         min_valid_loss = None
-        train_loss_list = []
+        train_loss_list, valid_loss_list = [], []
         for epoch in range(self.num_epochs):
             train_loss, valid_loss = 0.0, 0.0
+            start_time = time.time()
             for i, (images, captions, targets) in enumerate(self.train_data_loader):
                 images = images.to(self.device)
                 captions = captions.to(self.device)
@@ -81,10 +83,13 @@ class Trainer:
 
             train_loss = train_loss / self.train_data_num
             train_loss_list.append(train_loss)
+            valid_loss = valid_loss / self.valid_data_num
+            valid_loss_list.append(valid_loss)
             print(
                 f'Epoch {epoch+1}  '
                 f'Training Loss: {train_loss:.6f}  ' 
-                f'Validation Loss: {valid_loss / self.valid_data_num:.6f}'
+                f'Validation Loss: {valid_loss:.6f}  '
+                f'Time: {start_time-time.time()}'
             )
 
             if not min_valid_loss or min_valid_loss > loss:
@@ -95,4 +100,7 @@ class Trainer:
         plt.xlabel('Iteration')
         plt.ylabel('Loss')
         plt.savefig('train_loss.png')
-        plt.savefig('train_loss.png')
+        plt.plot(valid_loss_list)
+        plt.xlabel('Iteration')
+        plt.ylabel('Loss')
+        plt.savefig('valid_loss.png')
