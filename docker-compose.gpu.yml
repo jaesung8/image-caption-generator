@@ -17,3 +17,4 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/image-caption-generator
+      - ./torchcache:/root/.cache/torch/hub/checkpoints/

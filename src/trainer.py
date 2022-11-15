@@ -1,9 +1,11 @@
 import os
+import time
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 from src.model.caption_generator import CaptionGenerator
 from src.data.vocab import create_vocab
@@ -22,10 +24,16 @@ class Trainer:
         self._init_hyperparameters(hyperparameters)
         self.vocab = create_vocab()
         images, input, output = preprocess_flickr_8k(self.vocab)
-        self.data_loader = DataLoader(
-            ImageCatpionDataset(images, input, output),
-            batch_size=20,
+        self.train_data_loader = DataLoader(
+            ImageCatpionDataset(images, input, output, end=0.8),
+            batch_size=128,
         )
+        self.valid_data_loader = DataLoader(
+            ImageCatpionDataset(images, input, output, start=0.8, end=0.9),
+            batch_size=128,
+        )
+        self.train_data_num = len(self.train_data_loader)
+        self.valid_data_num = len(self.valid_data_loader)
         self.model = CaptionGenerator(
             self.device,
             embedding_size=256,
@@ -44,9 +52,12 @@ class Trainer:
             setattr(self, k, v)
 
     def train(self):
-        prev_loss = None
+        min_valid_loss = None
+        train_loss_list, valid_loss_list = [], []
         for epoch in range(self.num_epochs):
-            for i, (images, captions, targets) in enumerate(self.data_loader):
+            train_loss, valid_loss = 0.0, 0.0
+            start_time = time.time()
+            for i, (images, captions, targets) in enumerate(self.train_data_loader):
                 images = images.to(self.device)
                 captions = captions.to(self.device)
                 targets = targets.to(self.device)
@@ -57,9 +68,39 @@ class Trainer:
                 loss.backward()
                 # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 self.optimizer.step()
+                train_loss += loss.item()
             self.scheduler.step()
 
-            print(epoch, loss)
-            if not prev_loss or prev_loss > loss:
+            with torch.no_grad():
+                for i, (images, captions, targets) in enumerate(self.valid_data_loader):
+                    images = images.to(self.device)
+                    captions = captions.to(self.device)
+                    targets = targets.to(self.device)
+                    outputs = self.model(images, captions)
+                    outputs = torch.permute(outputs, (0, 2, 1))
+                    loss = self.criterion(outputs, targets)
+                    valid_loss += loss.item()
+
+            train_loss = train_loss / self.train_data_num
+            train_loss_list.append(train_loss)
+            valid_loss = valid_loss / self.valid_data_num
+            valid_loss_list.append(valid_loss)
+            print(
+                f'Epoch {epoch+1}  '
+                f'Training Loss: {train_loss:.6f}  ' 
+                f'Validation Loss: {valid_loss:.6f}  '
+                f'Time: {time.time()-start_time}'
+            )
+
+            if not min_valid_loss or min_valid_loss > loss:
                 torch.save(self.model, os.path.join(MODEL_DIR_PATH, 'model.pt'))
-                prev_loss = loss
+                min_valid_loss = loss
+
+        plt.plot(train_loss_list)
+        plt.xlabel('Iteration')
+        plt.ylabel('Loss')
+        plt.savefig('train_loss.png')
+        plt.plot(valid_loss_list)
+        plt.xlabel('Iteration')
+        plt.ylabel('Loss')
+        plt.savefig('valid_loss.png')

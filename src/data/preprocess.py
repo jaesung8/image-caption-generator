@@ -65,6 +65,6 @@ def preprocess_flickr_8k(vocab):
     )
 
     torch.save(processed_image_tensor, image_tensor_path)
-    torch.save(input_caption_tensor, f'{DATA_DIR_PATH}/input_caption_tensor.pt')
-    torch.save(output_caption_tensor, f'{DATA_DIR_PATH}/output_caption_tensor.pt')
+    torch.save(input_caption_tensor, input_caption_tensor_path)
+    torch.save(output_caption_tensor, output_caption_tensor_path)
     return processed_image_tensor, input_caption_tensor, output_caption_tensor
