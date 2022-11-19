@@ -6,6 +6,11 @@ import pytz
 from src.predictor import Predictor
 from src.trainer import Trainer
 
+@click.group()
+def cli():
+    pass
+
+
 @click.command()
 def train():
     hyperparameters = {
@@ -23,5 +28,5 @@ def predict():
     pass
 
 
-if __name__ == "__main__":
-    train()
+cli.add_command(train)
+cli.add_command(predict)
