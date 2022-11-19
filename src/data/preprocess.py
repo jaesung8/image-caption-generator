@@ -45,8 +45,8 @@ def preprocess_flickr_8k(vocab):
     for line in image_captions[1:]:
         image_name, caption = line.strip().split(',', 1)
         input_caption_tensor = torch.tensor([vocab[token.text] for token in tokenizer(caption.strip())])
-        input_caption_tensors.append(input_caption_tensor)
-        output_caption_tensors.append(torch.cat((input_caption_tensor, torch.tensor([vocab['<END>']]))))
+        input_caption_tensors.append(torch.cat((torch.tensor([vocab['<SOS>']]), input_caption_tensor)))
+        output_caption_tensors.append(torch.cat((input_caption_tensor, torch.tensor([vocab['<EOS>']]))))
         if image_name != prev_image_name:
             prev_image_name = image_name
             image = Image.open(os.path.join(image_dir_path, image_name))

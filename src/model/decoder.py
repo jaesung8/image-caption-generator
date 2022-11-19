@@ -13,6 +13,6 @@ class Decoder(nn.Module):
     def forward(self, features, captions):
         embeddings = self.dropout(self.embedding(captions))
         embeddings = torch.cat((features.unsqueeze(1), embeddings), dim=1)
-        outpus, _ = self.lstm(embeddings)
-        outputs = self.linear(outpus)
+        outputs, _ = self.lstm(embeddings)
+        outputs = self.linear(outputs)
         return outputs

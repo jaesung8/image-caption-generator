@@ -27,6 +27,6 @@ def create_vocab():
         counter.update(tokens)
 
     ordered_dict = OrderedDict(sorted(counter.items(), key=lambda x: (-x[1], x[0])))
-    result = vocab(ordered_dict, specials=['<START>','<END>', '<PAD>'])
+    result = vocab(ordered_dict, specials=['<SOS>','<EOS>', '<PAD>'])
     torch.save(result, vocab_path)
     return result
