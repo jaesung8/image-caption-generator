@@ -16,9 +16,9 @@ class ImageCatpionDataset(Dataset):
 
     def __getitem__(self, index):
         # input_caption = torch.cat(
-        #     torch.tensor(self.vocab['<START>']), self.captions[index]
+        #     torch.tensor(self.vocab['<SOS>']), self.captions[index]
         # )
         # output_caption = torch.cat(
-        #     self.captions[index], torch.tensor(self.vocab['<END>'])
+        #     self.captions[index], torch.tensor(self.vocab['<EOS>'])
         # )
         return self.images[index//5], self.captions[index], self.targets[index]

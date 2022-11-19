@@ -41,7 +41,7 @@ class CaptionGenerator(nn.Module):
                 predicted = output.argmax(1)
                 x = self.decoder.embedding(predicted).unsqueeze(0)
                 token = vocab.lookup_token[predicted.item()]
-                if token == "<END>":
+                if token == "<EOS>":
                     break
                 caption.append(token)
         return caption
@@ -59,7 +59,7 @@ class CaptionGenerator(nn.Module):
                 predicted = dist.sample()
                 x = self.decoder.embedding(predicted).unsqueeze(0)
                 token = vocab.lookup_token[predicted.item()]
-                if token == "<END>":
+                if token == "<EOS>":
                     break
                 caption.append(token)
         return caption
@@ -89,7 +89,7 @@ class CaptionGenerator(nn.Module):
             scores = top_k_scores.expand_as(scores) + scores
 
             
-            # 첫번째 스텝은 모두 같은 score을 가진다 <START>라는 뿌리로 시작하기 때문
+            # 첫번째 스텝은 모두 같은 score을 가진다 <SOS>라는 뿌리로 시작하기 때문
             if step == 1:
                 top_k_scores, top_k_words = scores[0].topk(k, dim=0)  # (s)
             else:
@@ -107,11 +107,11 @@ class CaptionGenerator(nn.Module):
             else:
                 seqs = torch.cat([seqs[prev_word_inds], next_word_inds.unsqueeze(1)], dim=1)  # (s, step+1)
 
-            # Which sequences are incomplete (didn't reach <end>, <end>idx == 2)?
+            # Which sequences are incomplete (didn't reach <EOS>, <EOS>idx == 2)?
             # 인덱스 마지막 저장하기
             incomplete_inds = [
                 ind for ind, next_word in enumerate(next_word_inds)
-                if next_word != vocab('<end>')
+                if next_word != vocab('<EOS>')
             ]
             complete_inds = list(set(range(len(next_word_inds))) - set(incomplete_inds))
 
