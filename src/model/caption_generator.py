@@ -33,10 +33,11 @@ class CaptionGenerator(nn.Module):
         caption = []
         with torch.no_grad():
             x = self.encoder(image).unsqueeze(0)
-            states = None
+            _, states = self.decoder.lstm(x)
+            x = self.decoder.embedding(vocab["<SOS>"]).unsqueeze(0)
 
             for _ in range(self.max_length):
-                hiddens, states = self.lstm(x, states)
+                hiddens, states = self.decoder.lstm(x, states)
                 output = self.fc(hiddens)
                 predicted = output.argmax(1)
                 x = self.decoder.embedding(predicted).unsqueeze(0)
@@ -50,10 +51,11 @@ class CaptionGenerator(nn.Module):
         caption = []
         with torch.no_grad():
             x = self.encoder(image).unsqueeze(0)
-            states = None
+            _, states = self.decoder.lstm(x)
+            x = self.decoder.embedding(vocab["<SOS>"]).unsqueeze(0)
 
             for _ in range(self.max_length):
-                hiddens, states = self.lstm(x, states)
+                hiddens, states = self.decoder.lstm(x, states)
                 output = self.fc(hiddens)
                 dist = Categorical(F.softmax(output, dim=-1))
                 predicted = dist.sample()
