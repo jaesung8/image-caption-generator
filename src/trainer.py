@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
 from src.model.caption_generator import CaptionGenerator
-from src.data.vocab import create_vocab
-from src.data.preprocess import preprocess_flickr_8k
-from src.data.dataset import ImageCatpionDataset
+from src.data.vocab import create_spacy_token_vocab, create_word_vocab
+from src.data.preprocess import preprocess_flickr
+from src.data.dataset import FlickrDataset
 from src.constants import MODEL_DIR_PATH
 
 
@@ -22,15 +22,17 @@ class Trainer:
         else:
             self.device = torch.device('cpu')
         self._init_hyperparameters(hyperparameters)
-        self.vocab = create_vocab()
-        images, input, output = preprocess_flickr_8k(self.vocab)
+        self.vocab = create_spacy_token_vocab()
+        self.vocab = create_word_vocab()
+        images, input, output = preprocess_flickr(self.vocab)
         self.train_data_loader = DataLoader(
-            ImageCatpionDataset(images, input, output, end=0.8),
-            batch_size=128,
+            FlickrDataset(images, input, output, end=0.8),
+            batch_size=96,
+            num_workers=2,
         )
         self.valid_data_loader = DataLoader(
-            ImageCatpionDataset(images, input, output, start=0.8, end=0.9),
-            batch_size=128,
+            FlickrDataset(images, input, output, start=0.8, end=0.9),
+            batch_size=96,
         )
         self.train_data_num = len(self.train_data_loader)
         self.valid_data_num = len(self.valid_data_loader)
@@ -38,7 +40,7 @@ class Trainer:
             self.device,
             embedding_size=256,
             hidden_size=256,
-            vocab_size=len(self.vocab),
+            vocab=self.vocab,
             num_layers=2,
         ).to(self.device)
 

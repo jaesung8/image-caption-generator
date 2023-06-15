@@ -5,13 +5,13 @@ import torch
 
 from src.constants import MODEL_DIR_PATH, DATA_DIR_PATH
 from src.data.image import preprocess_images
-from src.data.vocab import create_vocab
+from src.data.vocab import create_word_vocab, create_spacy_token_vocab
 
 
 class Predictor:
     def __init__(self):
         self.model = torch.load(os.path.join(MODEL_DIR_PATH, 'model.pt'))
-        self.vocab = create_vocab()
+        self.vocab = create_word_vocab()
 
         if torch.cuda.is_available():
             self.device = self.model.device

@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class ImageCatpionDataset(Dataset):
+class FlickrDataset(Dataset):
     def __init__(self, images, captions, targets, start=0, end=1):
         image_num = len(images)
         start_index = int(image_num * start)
