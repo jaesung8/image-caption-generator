@@ -8,7 +8,7 @@ class Decoder(nn.Module):
         self.embedding = nn.Embedding(vocab_size, embedding_size)
         self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers, batch_first=True)
         self.linear = nn.Linear(hidden_size, vocab_size)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.9)
 
     def forward(self, features, captions):
         embeddings = self.dropout(self.embedding(captions))

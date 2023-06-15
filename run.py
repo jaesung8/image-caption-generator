@@ -6,6 +6,7 @@ import pytz
 from src.predictor import Predictor
 from src.trainer import Trainer
 
+
 @click.group()
 def cli():
     pass
@@ -30,3 +31,4 @@ def predict():
 
 cli.add_command(train)
 cli.add_command(predict)
+cli()

@@ -1,5 +1,6 @@
-FROM nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu18.04
+FROM nvidia/cuda:11.7.0-cudnn8-devel-ubuntu20.04
 
+ARG TORCH_CUDA_ARCH_LIST="7.5"
 ARG env=production
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -9,16 +10,12 @@ RUN if [ ${env} != "production" ]; then \
     sed -i s%http://deb.debian.org/debian%http://ftp.kr.debian.org/debian% /etc/apt/sources.list; \
     fi
 
-RUN rm /etc/apt/sources.list.d/cuda.list && \
-    rm /etc/apt/sources.list.d/nvidia-ml.list
-
-# System setup
 RUN apt-get update && \
-    apt-get -y install libaio1 wget unzip python3.8 python3.8-dev python3-pip && \
+    apt-get -y install libaio1 wget unzip python3.8 python3.8-dev python3-pip libgl1-mesa-glx libglib2.0-0 && \
     python3.8 -m pip install pip --upgrade && \
     rm -rf /var/lib/apt/lists/*
 
-COPY . /image-caption-generator
+COPY requirements.txt /image-caption-generator/requirements.txt
 
 WORKDIR /image-caption-generator
 
