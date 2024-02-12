@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -32,22 +33,24 @@ class CaptionGenerator(nn.Module):
         output = self.decoder(features, captions)
         return output
 
-    def greedy_generate(self, image):
+    def greedy(self, images):
         caption = []
         with torch.no_grad():
-            x = self.encoder(image).unsqueeze(0)
-            _, states = self.decoder.lstm(x)
-            x = self.decoder.embedding(self.vocab["<SOS>"]).unsqueeze(0)
+            features = self.encoder(images)
+            _, states = self.decoder.lstm(features)
+            start = torch.LongTensor(np.ones(features.size(0)) * self.vocab['<SOS>']).to(self.device)
+            x = self.decoder.embedding(start)
 
             for _ in range(self.max_length):
                 hiddens, states = self.decoder.lstm(x, states)
-                output = self.fc(hiddens)
-                predicted = output.argmax(1)
-                x = self.decoder.embedding(predicted).unsqueeze(0)
-                token = self.vocab.lookup_token[predicted.item()]
-                if token == "<EOS>":
-                    break
-                caption.append(token)
+                output = self.decoder.linear(hiddens)
+                predicted = torch.argmax(output, 1)
+                x = self.decoder.embedding(predicted)
+                # if x.item() == self.vocab["<SOS>"]:
+                #     break
+                caption.append(predicted.cpu().numpy())
+        caption = np.stack(caption)
+        cpation = np.transpose(caption)
         return caption
 
     def sample(self, image):
