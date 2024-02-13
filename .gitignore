@@ -257,3 +257,6 @@ $RECYCLE.BIN/
 *.pt
 !best.pt
 torchcache/
+
+*.pkl
+*.png
