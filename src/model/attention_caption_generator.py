@@ -181,8 +181,10 @@ class AttentionCaptionGenerator(nn.Module):
             if step > self.max_length:
                 break
             step += 1
-
-        idx = completed_sentences_preds.index(max(completed_sentences_preds))
-        sentence = completed_sentences[idx]
-        alpha = completed_sentences_alphas[idx]
-        return sentence, alpha
+        if len(completed_sentences_preds):
+            idx = completed_sentences_preds.index(max(completed_sentences_preds))
+            sentence = completed_sentences[idx]
+            alpha = completed_sentences_alphas[idx]
+            return sentence, alpha
+        else:
+            return [], []

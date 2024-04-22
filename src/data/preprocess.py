@@ -134,6 +134,7 @@ def preprocess_caption(vocab):
         encoded_cpations = []
         image_paths = []
         max_len = 0
+        assert results[image_index * 5].split(',', 1)[0] == results[(image_index * 5) + 4].split(',', 1)[0]
         for line in results[image_index * 5:(image_index + 1) * 5]:
             image_path, caption = line.split(',', 1)
             image_path = os.path.join(DATA_DIR_PATH, image_path)

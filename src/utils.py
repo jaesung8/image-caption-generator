@@ -49,7 +49,18 @@ def visualize_att(image_path, alphas, words, smooth=True):
     print(image_path, words)
     image = Image.open(image_path)
     base_image_path = os.path.basename(image_path)
-    image = image.resize([14 * 24, 14 * 24], Image.LANCZOS)
+    w, h = image.size
+    if w > h:
+        w = w * 256 / h
+        h = 256
+    else:
+        h = h * 256 / w
+        w = 256
+    left = (w - 224) / 2
+    top = (h - 224) / 2
+    resized_img = image.resize((int(w), int(h)), Image.BICUBIC).crop((left, top, left + 224, top + 224))
+    img = np.array(resized_img.convert('RGB').getdata()).reshape(224, 224, 3)
+    image = img.astype('float32') / 255
     alphas = torch.tensor(alphas)
     for t in range(len(words)):
         if t > 50:
@@ -60,7 +71,7 @@ def visualize_att(image_path, alphas, words, smooth=True):
         plt.imshow(image)
         current_alpha = alphas[t, :]
         if smooth:
-            alpha = skimage.transform.pyramid_expand(current_alpha.reshape(7, 7), upscale=24, sigma=8)
+            alpha = skimage.transform.pyramid_expand(current_alpha.reshape(8, 8), upscale=24, sigma=8)
         else:
             alpha = skimage.transform.resize(current_alpha.reshape(7, 7), [14 * 24, 14 * 24])
         if t == 0:
