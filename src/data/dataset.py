@@ -8,6 +8,7 @@ from PIL import Image
 from spacy.tokenizer import Tokenizer
 from spacy.lang.en import English
 from multiprocessing import Manager
+import numpy as np
 
 from src.constants import DATA_DIR_PATH
 
@@ -73,7 +74,10 @@ class FlickrDataset(Dataset):
         # self.cache = DatasetCache(Manager())
 
     def __len__(self):
-        return len(self.caption_lines)
+        if self.train:
+            return len(self.caption_lines)
+        else:
+            return len(self.caption_lines) // 5
 
     def __getitem__(self, index):
         # if self.cache.is_cached(index):
@@ -81,6 +85,8 @@ class FlickrDataset(Dataset):
         
         # image_path, caption = self.caption_lines[index].split(',', 1)
         # img = Image.open(os.path.join(DATA_DIR_PATH, image_path))
+        if not self.train:
+            index = index * 5
         image_path, encoded_cpation, all_captions = self.caption_lines[index]
         img = Image.open(image_path)
 
@@ -88,7 +94,7 @@ class FlickrDataset(Dataset):
             transform = transforms.Compose(
                 [
                     transforms.Resize(256),
-                    transforms.CenterCrop(224),
+                    transforms.CenterCrop(256),
                     transforms.ToTensor(),
                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 ]
@@ -102,8 +108,7 @@ class FlickrDataset(Dataset):
         # tokenizer = Tokenizer(nlp.vocab)
         # encoded_cpation = [self.vocab[token.text] for token in tokenizer(caption.strip())]
         # encoded_cpation = [self.vocab['<SOS>']] + encoded_cpation + [self.vocab["<EOS>"]]
-
-        img = torch.FloatTensor(img)
+        img = torch.FloatTensor(np.array(img))
         encoded_cpation = torch.LongTensor(encoded_cpation)
         all_captions = torch.LongTensor(all_captions)
 

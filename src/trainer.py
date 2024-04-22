@@ -70,7 +70,7 @@ class Trainer:
         self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=self.gamma)
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.vocab["<PAD>"])
 
-        self.log_interval = int(self.train_data_num / 8)
+        self.log_interval = int(self.train_data_num / 16)
 
 
     def _init_hyperparameters(self, hyperparameters):
@@ -224,10 +224,11 @@ class AttentionTrainer:
         min_valid_loss, cur_valid_loss = sys.maxsize, 0
         train_loss_list, train_top1_acc, train_top5_acc = [], [], []
         valid_loss_list, valid_top1_acc, valid_top5_acc = [], [], []
-        train_loss, train_top1, train_top5 = AverageMeter(), AverageMeter(), AverageMeter()
-        valid_loss, valid_top1, valid_top5 = AverageMeter(), AverageMeter(), AverageMeter()
+        
 
         for epoch in range(self.num_epochs):
+            train_loss, train_top1, train_top5 = AverageMeter(), AverageMeter(), AverageMeter()
+            valid_loss, valid_top1, valid_top5 = AverageMeter(), AverageMeter(), AverageMeter()
             start_time = time.time()
             cur_valid_loss = 0
             cur_valid_caption_length = 0

@@ -1,6 +1,7 @@
 import os
 import copy
 
+import numpy as np
 import torch
 from nltk.translate.bleu_score import corpus_bleu
 from torch.utils.data import DataLoader
@@ -87,12 +88,12 @@ class AttentionPredictor:
             attention_size=512,
             vocab=self.vocab,
         )
-        self.model.load_state_dict(torch.load(os.path.join(MODEL_DIR_PATH, 'attention_check.pt')))
+        self.model.load_state_dict(torch.load(os.path.join(MODEL_DIR_PATH, 'attention_model_512.pt')))
         self.model.to(self.device)
         self.model.eval()
 
         _, _, test_captions = preprocess_caption(self.vocab)
-        self.test_dataset = FlickrDataset(test_captions, self.vocab)
+        self.test_dataset = FlickrDataset(test_captions, self.vocab, train=False)
         self.test_data_loader = DataLoader(
             self.test_dataset
         )
@@ -106,34 +107,50 @@ class AttentionPredictor:
     def predict(self):
         alphas_list = []
         words_list = []
+        infered_caption_list = []
         path_cpation_list = []
         all_caption_list = []
+        print(len(self.test_dataset))
         for i, (image, caption, all_captions) in tqdm(enumerate(self.test_data_loader)):
             image = image.to(self.device)
             caption = caption.to(self.device)
             infered_caption, alphas = self.model.caption(image, 5)
-            words = [self.itos_map[idx] for idx in infered_caption]
-            alphas_list.append(alphas)
-            words_list.append(words)
-            all_caption_list.append(all_captions)
-            path_cpation_list.append(self.test_dataset.caption_lines[i][0])
-            if i > 50:
-                break
+            if len(infered_caption):
+                words = [self.itos_map[idx] for idx in infered_caption]
+                alphas_list.append(alphas)
+                infered_caption_list.append(infered_caption)
+                words_list.append(words)
+                all_caption_list.append(all_captions.squeeze(0))
+                path_cpation_list.append(self.test_dataset.caption_lines[i*5][0])
 
-        bleu = self.get_bleu_score(words_list, all_caption_list)
-        print(bleu)
-        return words_list, alphas_list, path_cpation_list
+        bleu_score = self.get_bleu_score(infered_caption_list, all_caption_list)
+        top_idices = np.argsort(bleu_score)[-20:]
+        print(np.mean(bleu_score))
+        for idx in top_idices:
+            _, encoded_cpation, _ = self.test_dataset[idx]
+            print([self.itos_map[idx] for idx in encoded_cpation.tolist()])
+
+        return words_list, alphas_list, path_cpation_list, top_idices
     
     def get_bleu_score(self, infered_captions, all_captions):
+        all_captions = [x.tolist() for x in all_captions]
+
         references = []
+        hypotheses = []
         for i in range(len(all_captions)):
             img_captions = list(
                 map(
-                    lambda c: [w for w in c if w not in {self.vocab['<SOS>'], self.vocab['<PAD>'], self.vocab['<EOS']}],
+                    lambda c: [w for w in c if w not in {self.vocab['<SOS>'], self.vocab['<PAD>'], self.vocab['<EOS>']}],
                     all_captions[i]
                 )
             )  # remove <start> and pads
             references.append(img_captions)
+
+        for i in range(len(infered_captions)):
+            img_captions = [
+                w for w in infered_captions[i] if w not in {self.vocab['<SOS>'], self.vocab['<PAD>'], self.vocab['<EOS>']}
+            ]
+            hypotheses.append(img_captions)
 
         # for i in range(len(infered_captions)):
         #     img_captions = list(
@@ -145,7 +162,8 @@ class AttentionPredictor:
         #     references.append(img_captions)
 
 
-        assert len(references) == len(all_captions)
-
-        bleu4 = corpus_bleu(references, infered_captions)
-        return bleu4
+        assert len(references) == len(infered_captions)
+        bleu_scores = []
+        for i in range(len(all_captions)):
+            bleu_scores.append(corpus_bleu([references[i]], [hypotheses[i]]))
+        return bleu_scores
